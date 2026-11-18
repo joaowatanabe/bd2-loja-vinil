@@ -1,0 +1,21 @@
+{
+  "name": "bd2-loja-vinil",
+  "version": "0.1.0",
+  "description": "Atividade Final de Banco de Dados II (SENAC Pelotas): loja de discos de vinil com PostgreSQL + MongoDB",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node --env-file=.env src/index.js",
+    "db:sql": "psql -h ${PG_HOST:-localhost} -p ${PG_PORT:-5432} -U ${PG_USER:-postgres} -d ${PG_DATABASE:-loja_vinil} -f sql/01_schema.sql -f sql/02_seed.sql",
+    "db:mongo": "mongosh \"${MONGO_URI:-mongodb://localhost:27017}/${MONGO_DB:-loja_vinil}\" mongo/01_init.js",
+    "db:setup": "npm run db:sql && npm run db:mongo"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "mongodb": "^7.9.0",
+    "pg": "^8.23.1"
+  }
+}

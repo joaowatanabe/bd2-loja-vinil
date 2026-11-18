@@ -1,0 +1,21 @@
+# Opcional: sobe os dois bancos limpos em container (Colima ou Docker).
+# Portas do host deslocadas (5433 / 27018) para não brigar com Postgres.app e mongod locais.
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: loja_vinil
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./sql:/docker-entrypoint-initdb.d:ro
+  mongo:
+    image: mongo:8
+    environment:
+      MONGO_INITDB_DATABASE: loja_vinil
+    ports:
+      - "27018:27017"
+    volumes:
+      - ./mongo:/docker-entrypoint-initdb.d:ro
