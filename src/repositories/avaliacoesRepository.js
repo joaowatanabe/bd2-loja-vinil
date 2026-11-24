@@ -59,3 +59,36 @@ export async function resumoDeTodos() {
     { $group: { _id: "$produto_id", media: { $avg: "$nota" }, total: { $sum: 1 } } },
   ]).toArray();
 }
+
+// ---------- Índice (etapa 07) ----------
+export async function listarIndices() {
+  const col = await avaliacoes();
+  return col.indexes();
+}
+
+// Desce pela árvore do plano vencedor juntando os estágios: "FETCH → IXSCAN" ou "COLLSCAN".
+function estagios(plano) {
+  const nomes = [];
+  for (let p = plano.queryPlan ?? plano; p; p = p.inputStage) nomes.push(p.stage);
+  return nomes.join(" → ");
+}
+
+// Roda a MESMA busca duas vezes com explain("executionStats"), como no Slide 15 da Aula 15:
+// 1) normal → o MongoDB escolhe o índice (IXSCAN)
+// 2) com hint({ $natural: 1 }) → forçamos a varredura da coleção inteira (COLLSCAN)
+export async function explicarBusca(produtoId) {
+  const col = await avaliacoes();
+  const resumo = async (cursor) => {
+    const e = await cursor.explain("executionStats");
+    return {
+      estagio: estagios(e.queryPlanner.winningPlan),
+      docsExaminados: e.executionStats.totalDocsExamined,
+      chavesExaminadas: e.executionStats.totalKeysExamined,
+      retornados: e.executionStats.nReturned,
+    };
+  };
+  return {
+    comIndice: await resumo(col.find({ produto_id: produtoId })),
+    semIndice: await resumo(col.find({ produto_id: produtoId }).hint({ $natural: 1 })),
+  };
+}

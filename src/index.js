@@ -109,6 +109,16 @@ async function excluirAvaliacao() {
   console.log(apagados ? "Avaliação excluída." : "Avaliação não encontrada.");
 }
 
+async function mostrarIndiceExplain() {
+  console.log("Índices da coleção avaliacoes:");
+  for (const i of await avaliacoes.listarIndices()) console.log(`  ${i.name}: ${JSON.stringify(i.key)}`);
+  const id = await perguntarNumero("id do disco para o find({ produto_id }): ");
+  const r = await avaliacoes.explicarBusca(id);
+  console.table({ "com índice": r.comIndice, "sem índice (forçado)": r.semIndice });
+  console.log("Por quê: toda integração busca avaliações por produto_id; com o índice o Mongo");
+  console.log("lê só os documentos daquele disco (IXSCAN) em vez da coleção inteira (COLLSCAN).");
+}
+
 // ---------- Demonstrações: $jsonSchema e regex ----------
 async function inserirAvaliacaoInvalida() {
   // Documento com várias regras quebradas de propósito (e SEM cliente_email, que é required).
@@ -142,6 +152,7 @@ const opcoes = {
   9: ["Cadastrar avaliação", cadastrarAvaliacao],
   10: ["Alterar avaliação", alterarAvaliacao],
   11: ["Excluir avaliação", excluirAvaliacao],
+  12: ["Índices e explain (IXSCAN × COLLSCAN)", mostrarIndiceExplain],
   15: ["Tentar inserir avaliação INVÁLIDA ($jsonSchema)", inserirAvaliacaoInvalida, "Demonstrações"],
   16: ["Testar a regex do código (VIN-0000)", testarRegexCodigo],
 };
