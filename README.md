@@ -2,22 +2,21 @@
 
 Atividade Final de **Banco de Dados II**, ADS SENAC Pelotas, 3º semestre. Entrega e apresentação na **Aula 18, 02/12/2026**.
 
-Aplicação de terminal (CLI) de uma loja de discos de vinil. Ela usa **dois bancos ao mesmo tempo**: o **PostgreSQL** guarda o catálogo, o estoque, os clientes e os pedidos, e o **MongoDB** guarda as avaliações dos discos. A integração junta os dois numa ficha completa do disco: preço e estoque vêm do SQL, nota média e opiniões vêm do Mongo.
+Aplicação de terminal (CLI) de uma loja de discos de vinil que usa **dois bancos ao mesmo tempo**: o **PostgreSQL** guarda o catálogo, o estoque, os clientes e os pedidos; o **MongoDB** guarda as avaliações dos discos. A integração junta os dois numa ficha completa do disco: preço e estoque vêm do SQL, nota média e opiniões vêm do Mongo.
 
 > Enunciado oficial: <https://github.com/gladimircc/bd2>
 
 ---
 
-## 👥 Integrantes
+## 1. 👥 Integrantes
 
 | Nome | GitHub |
 |---|---|
 | João Vicente Watanabe | [@joaowatanabe](https://github.com/joaowatanabe) |
-| _(integrante 2)_ | |
-| _(integrante 3)_ | |
-| _(integrante 4)_ | |
 
-## 📋 Resumo do projeto
+> TODO: incluir os demais integrantes, se houver (grupo de até 4).
+
+## 2–4. 📋 Tema, linguagem e SGBD
 
 | Item | Escolha |
 |---|---|
@@ -25,8 +24,47 @@ Aplicação de terminal (CLI) de uma loja de discos de vinil. Ela usa **dois ban
 | **Linguagem** | JavaScript (Node.js 20+, ES Modules) |
 | **SGBD relacional** | PostgreSQL 17 |
 | **Banco não relacional** | MongoDB 8 |
-| **Drivers** | [`pg`](https://node-postgres.com/) e [`mongodb`](https://www.mongodb.com/docs/drivers/node/) (oficiais, sem ORM) |
+| **Drivers** | [`pg`](https://node-postgres.com/) e [`mongodb`](https://www.mongodb.com/docs/drivers/node/), oficiais, **sem ORM** (SQL puro parametrizado) |
 | **Interface** | Menu no terminal (`node:readline`) |
+
+---
+
+## 5. ▶️ Como executar
+
+Pré-requisitos: Node.js **20+** e Docker (no Mac: [Colima](https://github.com/abiosoft/colima)).
+
+```bash
+npm install
+cp .env.example .env     # já vem apontando para as portas do docker compose (5433 / 27018)
+
+colima start             # só no Mac com Colima
+npm run db:up            # sobe PostgreSQL + MongoDB e espera ficarem prontos
+                         # na 1ª subida, sql/*.sql e mongo/01_init.js rodam sozinhos
+npm start                # abre o menu
+```
+
+| Script | O que faz |
+|---|---|
+| `npm run db:up` | `docker compose up -d --wait` |
+| `npm run db:reset` | reaplica `sql/01_schema.sql`, `sql/02_seed.sql` e `mongo/01_init.js` (volta os dados ao estado inicial) |
+| `npm run db:down` | derruba os containers (depois `colima stop` para liberar memória) |
+
+**Sem Docker** (bancos instalados na máquina): ajuste o `.env` para `PG_PORT=5432` e `MONGO_URI=mongodb://localhost:27017`, depois
+`createdb loja_vinil && psql -d loja_vinil -f sql/01_schema.sql -f sql/02_seed.sql` e `mongosh "mongodb://localhost:27017/loja_vinil" mongo/01_init.js`.
+
+### O menu
+
+```text
+-- Conexões --          1. Testar conexões (PostgreSQL + MongoDB)
+-- PostgreSQL --        2. Listar discos (JOIN)  3. Cadastrar  4. Alterar preço/estoque  5. Excluir
+                        6. Pedidos com cliente e total (JOIN 4 tabelas)
+-- MongoDB --           7. Listar avaliações  8. Buscar por título (regex)  9. Cadastrar
+                       10. Alterar  11. Excluir  12. Índices e explain (IXSCAN × COLLSCAN)
+-- Integração --       13. Ficha completa do disco  14. Catálogo ranqueado por nota
+-- Demonstrações --    15. Inserir avaliação INVÁLIDA ($jsonSchema)  16. Testar a regex do código
+```
+
+Saídas reais de todas as opções: [`docs/evidencias.md`](docs/evidencias.md).
 
 ---
 
@@ -34,189 +72,104 @@ Aplicação de terminal (CLI) de uma loja de discos de vinil. Ela usa **dois ban
 
 ```text
 bd2-loja-vinil/
-├── README.md
-├── package.json
-├── .env.example               # modelo das variáveis de conexão
-├── docker-compose.yml         # opcional: sobe Postgres + Mongo em container
-├── sql/
-│   ├── 01_schema.sql          # CREATE TABLE: 5 tabelas, PK, FK e CHECK
-│   └── 02_seed.sql            # dados de exemplo
-├── mongo/
-│   └── 01_init.js             # coleção avaliacoes + $jsonSchema + índice + seed
+├── sql/01_schema.sql          # CREATE TABLE: 5 tabelas, PK, FK, CHECK, UNIQUE
+├── sql/02_seed.sql            # dados de exemplo
+├── mongo/01_init.js           # coleção avaliacoes + $jsonSchema + índice + seed
+├── docker-compose.yml         # Postgres 17 (5433) + Mongo 8 (27018) com healthcheck
 ├── docs/
-│   └── modelo-er.md           # modelo ER (Mermaid)
+│   ├── modelo-er.md / .png    # modelo ER (Mermaid + imagem exportada)
+│   ├── evidencias.md          # saídas reais dos testes
+│   ├── aulas/01..09-*.md      # material de estudo, etapa por etapa
+│   ├── ROTEIRO-APRESENTACAO.md
+│   ├── PERGUNTAS-DO-PROFESSOR.md
+│   └── TREINO-AO-VIVO.md
 └── src/
-    ├── index.js               # menu principal
-    ├── cli/menu.js            # helpers de entrada no terminal
-    ├── db/
-    │   ├── postgres.js        # pool de conexão PostgreSQL
-    │   └── mongo.js           # cliente MongoDB
-    ├── repositories/
-    │   ├── produtosRepository.js    # CRUD + JOIN (SQL)
-    │   ├── pedidosRepository.js     # JOIN pedidos ↔ clientes ↔ itens (SQL)
-    │   └── avaliacoesRepository.js  # CRUD + aggregate (Mongo)
-    └── services/
-        └── integracaoService.js     # funcionalidades que usam os DOIS bancos
+    ├── index.js                       # menu: cada opção é uma função curta
+    ├── cli/menu.js                    # perguntar() / perguntarNumero()
+    ├── cli/erros.js                   # erros do PG e do $jsonSchema em texto legível + REGEX_CODIGO
+    ├── db/postgres.js, db/mongo.js    # conexões
+    ├── repositories/produtosRepository.js    # CRUD + JOIN (SQL)
+    ├── repositories/pedidosRepository.js     # JOIN de 4 tabelas (SQL)
+    ├── repositories/avaliacoesRepository.js  # CRUD + aggregate + explain (Mongo)
+    └── services/integracaoService.js         # funcionalidades que usam os DOIS bancos
 ```
 
-O código fica em camadas: `db/` só conecta, `repositories/` só conversa com um banco cada, e `services/` junta os dois. Assim a regra da integração não se mistura com SQL nem com a sintaxe do Mongo, e fica fácil mexer numa consulta ao vivo na apresentação.
+Camadas: `db/` só conecta, cada `repositories/` conversa com **um** banco, e `services/` junta os dois.
 
 ---
 
-## ▶️ Como executar
+## 6. 🔌 Como os dois bancos são usados
 
-### Pré-requisitos
+### PostgreSQL (Parte 1)
 
-- Node.js **20+** (o projeto usa `--env-file`, nativo do Node)
-- PostgreSQL **e** MongoDB rodando: local ou pelo `docker-compose.yml`
-- `psql` e `mongosh` no PATH (para rodar os scripts)
-
-### 1. Instalar as dependências
-
-```bash
-git clone git@github.com:joaowatanabe/bd2-loja-vinil.git
-cd bd2-loja-vinil
-npm install
-cp .env.example .env      # ajuste usuário, senha e portas
-```
-
-### 2a. Bancos locais (instalados na máquina)
-
-```bash
-# PostgreSQL
-createdb loja_vinil
-psql -d loja_vinil -f sql/01_schema.sql -f sql/02_seed.sql
-
-# MongoDB (no macOS com Homebrew: brew services run mongodb-community@8.0)
-mongosh "mongodb://localhost:27017/loja_vinil" mongo/01_init.js
-```
-
-### 2b. Ou via Docker / Colima
-
-```bash
-docker compose up -d
-```
-
-Os scripts de `sql/` e `mongo/` rodam sozinhos na primeira subida. As portas do host são **5433** (Postgres) e **27018** (Mongo), para não brigar com bancos locais. Ajuste o `.env`:
-
-```env
-PG_PORT=5433
-PG_USER=postgres
-PG_PASSWORD=postgres
-MONGO_URI=mongodb://localhost:27018
-```
-
-### 3. Rodar a aplicação
-
-```bash
-npm start
-```
-
-A opção **1 · Testar conexões** confirma que os dois bancos respondem.
-
----
-
-## 🐘 Parte 1: banco relacional (PostgreSQL)
-
-Modelo ER completo em [`docs/modelo-er.md`](docs/modelo-er.md).
+Modelo ER: [`docs/modelo-er.md`](docs/modelo-er.md) · ![Modelo ER](docs/modelo-er.png)
 
 | Tabela | Papel | Chaves |
 |---|---|---|
-| `categorias` | gênero musical (Rock, MPB...) | PK `id` |
+| `categorias` | gênero musical | PK `id`, `nome` UNIQUE |
 | `produtos` | disco: código, preço, estoque | PK `id`, FK `categoria_id → categorias` |
-| `clientes` | quem compra | PK `id`, `email` único |
+| `clientes` | quem compra | PK `id`, `email` UNIQUE |
 | `pedidos` | compra de um cliente | PK `id`, FK `cliente_id → clientes` |
 | `itens_pedido` | discos de cada pedido (N:N) | PK composta, FKs para `pedidos` e `produtos` |
 
-- **CRUD:** cadastrar, listar, alterar preço e excluir discos (menu 2 a 5).
-- **JOIN:** listagem de discos com o nome da categoria (`produtos JOIN categorias`) e pedidos com cliente, itens e total (`pedidos JOIN clientes JOIN itens_pedido JOIN produtos`).
-- **Integridade:** a FK com `ON DELETE RESTRICT` impede excluir um disco que já foi vendido, e os `CHECK` impedem preço ou estoque negativos.
+- **CRUD** de discos: menu 2–5 (`INSERT … RETURNING`, `SELECT`, `UPDATE`, `DELETE`, sempre com `$1, $2…`).
+- **JOIN**: discos + categoria (menu 2) e pedidos + clientes + itens + produtos com `SUM`/`GROUP BY` (menu 6).
+- **Integridade no banco**: `ON DELETE RESTRICT` impede excluir disco vendido; `CHECK` impede preço/estoque negativos; erros viram mensagens legíveis.
 
-## 🍃 Parte 2: MongoDB
+### MongoDB (Parte 2) — coleção `avaliacoes`
 
-Coleção **`avaliacoes`**, criada em [`mongo/01_init.js`](mongo/01_init.js).
-
-| Requisito | Onde está no `$jsonSchema` |
+| Requisito | No `$jsonSchema` ([`mongo/01_init.js`](mongo/01_init.js)) |
 |---|---|
-| Campos obrigatórios | `required: [produto_id, codigo_produto, cliente_email, nota, titulo, criado_em]` |
-| Validação de tipos | `bsonType` em todos os campos (`int`, `string`, `array`, `date`) |
-| `minimum` / `maximum` | `nota` entre **1 e 5** |
-| `minLength` / `maxLength` | `titulo` entre 3 e 80 caracteres, `comentario` até 1000 |
-| `enum` | `sentimento` ∈ {positivo, neutro, negativo}, `estado_midia` ∈ {novo, seminovo, usado} |
-| `pattern` (regex) | `codigo_produto`: `^VIN-[0-9]{4}$` · `cliente_email`: `^[\w.+-]+@[\w-]+(\.[\w-]+)+$` |
+| `required` | `produto_id, codigo_produto, cliente_email, nota, titulo, criado_em` |
+| `bsonType` | `int`, `string`, `array`, `date` |
+| `minimum`/`maximum` | `nota` entre 1 e 5 |
+| `minLength`/`maxLength` | `titulo` 3–80, `comentario` até 1000 |
+| `enum` | `sentimento` ∈ {positivo, neutro, negativo}; `estado_midia` ∈ {novo, seminovo, usado} |
+| `pattern` | `codigo_produto`: `^VIN-[0-9]{4}$` · `cliente_email`: `^[\w.+-]+@[\w-]+(\.[\w-]+)+$` |
 | Índice | `idx_avaliacoes_produto_id` em `{ produto_id: 1 }` |
 
-### Por que o índice está em `produto_id`?
+- **CRUD**: menu 7–11 (`find`, `find` com `$regex`, `insertOne`, `updateOne` com `$set`, `deleteOne`).
+- **Documento inválido**: menu 15 envia um documento com 5 violações; o Mongo recusa (erro 121) e o app lista cada regra quebrada.
+- **Regex `^VIN-[0-9]{4}$`**: `^` início, `VIN-` literal, `[0-9]{4}` exatamente 4 dígitos, `$` fim. Aceita `VIN-0001`; recusa `vin-0001`, `VIN-12345`, `DISCO-1`.
+- **Por que o índice em `produto_id`?** Toda integração começa com "avaliações do disco X" (`find({ produto_id })` / `$match: { produto_id }`). Sem índice o Mongo lê a coleção inteira (**COLLSCAN**); com índice vai direto aos documentos daquele disco (**IXSCAN**). O menu 12 mostra isso com `explain("executionStats")`: 3 documentos examinados com índice × 12 sem.
 
-Toda funcionalidade de integração começa com "me dê as avaliações do disco X", ou seja, `find({ produto_id })` ou `$match: { produto_id }`. Sem índice, o MongoDB lê a coleção inteira (**COLLSCAN**). Com o índice, ele vai direto aos documentos daquele disco (**IXSCAN**). Para conferir:
+### Integração (Parte 3)
 
-```js
-db.avaliacoes.find({ produto_id: 1 }).explain("executionStats")
-// winningPlan → IXSCAN · totalDocsExamined = só as avaliações do disco 1
-```
+Ponte: **`produtos.id` (PostgreSQL) = `avaliacoes.produto_id` (MongoDB)**, juntados na aplicação ([`integracaoService.js`](src/services/integracaoService.js)).
 
-### Regex explicada: `^VIN-[0-9]{4}$`
+- **Menu 13 · Ficha do disco**: `JOIN` no SQL (título, categoria, preço, estoque) + `$match`/`$group` no Mongo (nota média, total) + últimas opiniões.
+- **Menu 14 · Catálogo ranqueado**: todos os discos do SQL ordenados pela média calculada no Mongo (2 consultas + `Map` na aplicação).
+- **Menu 9 · Cadastrar avaliação**: antes de gravar no Mongo, confere no Postgres se o disco existe (o Mongo não tem FK) e copia o `codigo_produto`.
 
-`^` marca o início, `VIN-` é literal, `[0-9]{4}` são exatamente 4 dígitos e `$` marca o fim. Aceita `VIN-0001` e recusa `vin-1`, `VIN-12345` e `DISCO-1`.
-
-### Tentativa de inserção inválida (para a apresentação)
-
-O menu **12** tenta inserir uma avaliação com `nota: 7` e `codigo_produto: "DISCO-1"`. O MongoDB recusa com `Document failed validation` e a aplicação mostra quais regras foram quebradas (`errInfo.details`).
-
-## 🔗 Parte 3: integração
-
-A chave da ponte é **`produtos.id` (PostgreSQL) = `avaliacoes.produto_id` (MongoDB)**.
-
-```text
-PostgreSQL                         MongoDB
-produto + categoria + estoque      avaliações do produto
-(JOIN)                             ($match + $group → média, total)
-            \                     /
-             →  integracaoService  ←
-                       ↓
-   Ficha do disco: título, artista, preço, estoque,
-   categoria + nota média + nº de avaliações + últimas opiniões
-```
-
-- **Menu 10 · Ficha completa do disco:** um disco com os dados dos dois bancos.
-- **Menu 11 · Catálogo ranqueado:** todos os discos do SQL ordenados pela nota média calculada no Mongo.
-
-## 🤔 Por que cada dado está em cada banco?
+## 7. 🤔 Por que cada dado está em cada banco?
 
 | Dado | Banco | Motivo |
 |---|---|---|
-| Discos, preço, estoque | **PostgreSQL** | Dado estruturado, sempre com os mesmos campos. Preço e estoque precisam de consistência (`CHECK`, transação): vender um disco baixa o estoque, e isso não pode ficar pela metade. |
-| Clientes e pedidos | **PostgreSQL** | Relações fortes (cliente → pedido → itens → disco) com integridade garantida por FK. É dado financeiro, então precisa de ACID e de JOINs para relatórios. |
-| Avaliações | **MongoDB** | Texto livre, campos opcionais que variam (tags, comentário, estado da mídia) e volume que cresce rápido. Cada avaliação é um documento autocontido, lido sempre junto, e o esquema evolui sem `ALTER TABLE`, enquanto o `$jsonSchema` garante um mínimo de qualidade. |
+| Discos, preço, estoque | **PostgreSQL** | Estrutura fixa. Preço e estoque precisam de consistência (`CHECK`, transação): vender um disco baixa o estoque e isso não pode ficar pela metade. `NUMERIC` exato para dinheiro. |
+| Clientes e pedidos | **PostgreSQL** | Relações fortes (cliente → pedido → itens → disco) garantidas por FK. É dado financeiro: precisa de ACID e de `JOIN` para relatórios. |
+| Avaliações | **MongoDB** | Conteúdo do usuário: texto livre e campos opcionais que variam (comentário, tags, estado da mídia). Cada avaliação é um documento autocontido, lido inteiro; o volume cresce rápido e o formato pode evoluir sem `ALTER TABLE`. O `$jsonSchema` garante o mínimo de qualidade. A avaliação **referencia** o disco por `produto_id` (Aula 12) porque a lista cresce sem limite. |
 
-Resumindo: o que é **transacional e relacionado** vai para o SQL, e o que é **flexível e de conteúdo do usuário** vai para o Mongo.
+Resumo: o que é **transacional e relacionado** foi para o SQL; o que é **flexível e de conteúdo do usuário** foi para o Mongo.
 
 ---
 
 ## ✅ Checklist da entrega
 
-- [x] A aplicação conecta ao PostgreSQL.
-- [x] A aplicação conecta ao MongoDB.
+- [x] A aplicação conecta ao PostgreSQL. (menu 1)
+- [x] A aplicação conecta ao MongoDB. (menu 1)
 - [x] O banco relacional tem pelo menos 3 tabelas relacionadas (são 5).
-- [ ] A aplicação faz inclusão, consulta, alteração e exclusão (SQL e Mongo).
-- [x] Existe pelo menos uma consulta com `JOIN`.
+- [x] Inclusão, consulta, alteração e exclusão — SQL (menu 2–5) e Mongo (menu 7–11).
+- [x] Pelo menos uma consulta com `JOIN` (menu 2 e 6).
 - [x] O MongoDB tem validação com `$jsonSchema`.
-- [x] Existe validação com expressão regular (`pattern`).
-- [x] Existe pelo menos um índice no MongoDB.
-- [ ] Existe uma funcionalidade que usa dados dos dois bancos.
-- [ ] Modelo ER exportado como imagem (`docs/modelo-er.png`).
+- [x] Validação com expressão regular (`pattern`).
+- [x] Pelo menos um índice no MongoDB (menu 12).
+- [x] Funcionalidade que usa dados dos dois bancos (menu 13 e 14).
+- [x] Modelo ER incluído (`docs/modelo-er.png`).
 - [x] Scripts SQL e MongoDB incluídos.
 - [x] O README explica como executar o projeto.
-- [ ] Todos os integrantes conseguem explicar e demonstrar a aplicação.
+- [ ] Todos os integrantes conseguem explicar e demonstrar a aplicação → estudar `docs/aulas/` e `docs/TREINO-AO-VIVO.md`.
 
-## 🎤 Roteiro da apresentação (02/12)
-
-1. `npm start` → **1** (as duas conexões OK)
-2. **2** listar discos (JOIN) → **3/4/5** CRUD no SQL
-3. **6–9** CRUD de avaliações no Mongo
-4. **10** ficha do disco (integração) → **11** ranking
-5. **12** inserção inválida → explicar o `$jsonSchema` e a regex
-6. No `mongosh`: `db.avaliacoes.getIndexes()` e `explain()` mostrando IXSCAN
+Roteiro da apresentação: [`docs/ROTEIRO-APRESENTACAO.md`](docs/ROTEIRO-APRESENTACAO.md).
 
 ## 🤖 Uso de IA
 

@@ -64,7 +64,7 @@ async function listarPedidos() {
 // ---------- MongoDB: CRUD de avaliações ----------
 // Deixa a avaliação "enxuta" para caber na tabela do terminal.
 function resumir(a) {
-  return { _id: String(a._id), produto_id: a.produto_id, nota: a.nota, titulo: a.titulo, cliente_email: a.cliente_email, sentimento: a.sentimento };
+  return { _id: String(a._id), produto_id: a.produto_id, nota: a.nota, titulo: a.titulo, cliente_email: a.cliente_email, sentimento: a.sentimento ?? "-" };
 }
 
 async function listarAvaliacoes() {
