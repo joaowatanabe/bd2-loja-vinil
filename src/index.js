@@ -1,5 +1,6 @@
 // Loja de Discos de Vinil — Atividade Final BD2
 // Ponto de entrada: menu no terminal com operações nos dois bancos.
+// Cada opção chama uma função curta; quem fala com os bancos são os repositories/services.
 import { pool } from "./db/postgres.js";
 import { connectMongo, closeMongo } from "./db/mongo.js";
 import { rl, perguntar, perguntarNumero } from "./cli/menu.js";
@@ -9,22 +10,7 @@ import * as pedidos from "./repositories/pedidosRepository.js";
 import * as avaliacoes from "./repositories/avaliacoesRepository.js";
 import * as integracao from "./services/integracaoService.js";
 
-const opcoes = {
-  1: ["Testar conexões (PostgreSQL + MongoDB)", testarConexoes],
-  2: ["[SQL] Listar discos (JOIN com categoria)", async () => console.table(await produtos.listar())],
-  3: ["[SQL] Cadastrar disco", cadastrarDisco],
-  4: ["[SQL] Alterar preço/estoque de um disco", alterarDisco],
-  5: ["[SQL] Excluir disco", excluirDisco],
-  50: ["[SQL] Pedidos com cliente e total (JOIN 4 tabelas)", listarPedidos],
-  6: ["[Mongo] Listar avaliações de um disco", listarAvaliacoes],
-  7: ["[Mongo] Cadastrar avaliação", () => avaliacoes.inserir({})],
-  8: ["[Mongo] Alterar avaliação", () => avaliacoes.atualizar()],
-  9: ["[Mongo] Excluir avaliação", () => avaliacoes.excluir()],
-  10: ["[Integração] Ficha completa do disco", () => integracao.fichaDoProduto()],
-  11: ["[Integração] Catálogo ranqueado por nota", () => integracao.catalogoRanqueado()],
-  12: ["[Demo] Tentar inserir avaliação inválida ($jsonSchema)", inserirInvalida],
-};
-
+// ---------- Conexões ----------
 async function testarConexoes() {
   const { rows } = await pool.query("SELECT version()");
   console.log("PostgreSQL OK:", rows[0].version.split(",")[0]);
@@ -33,7 +19,11 @@ async function testarConexoes() {
   console.log("MongoDB OK:", info.version);
 }
 
-// ---------- PostgreSQL: CRUD de discos ----------
+// ---------- PostgreSQL: CRUD de discos + JOIN ----------
+async function listarDiscos() {
+  console.table(await produtos.listar());
+}
+
 async function cadastrarDisco() {
   console.table(await produtos.listarCategorias());
   const novo = await produtos.inserir({
@@ -71,29 +61,76 @@ async function listarPedidos() {
   if (id) console.table(await pedidos.itensDoPedido(Number(id)));
 }
 
-async function listarAvaliacoes() {
-  const id = Number(await perguntar("id do disco: "));
-  console.table(await avaliacoes.listarPorProduto(id));
+// ---------- MongoDB: CRUD de avaliações ----------
+// Deixa a avaliação "enxuta" para caber na tabela do terminal.
+function resumir(a) {
+  return { _id: String(a._id), produto_id: a.produto_id, nota: a.nota, titulo: a.titulo, cliente_email: a.cliente_email, sentimento: a.sentimento };
 }
 
-async function inserirInvalida() {
-  const db = await connectMongo();
-  try {
-    // nota 7 (> maximum 5) e código fora do pattern ^VIN-[0-9]{4}$
-    await db.collection("avaliacoes").insertOne({
-      produto_id: 1, codigo_produto: "DISCO-1", cliente_email: "x@x.com",
-      nota: 7, titulo: "Teste", criado_em: new Date(),
-    });
-  } catch (err) {
-    console.log("Rejeitado pelo $jsonSchema:", err.message);
-    console.dir(err.errInfo?.details, { depth: null });
-  }
+async function listarAvaliacoes() {
+  const id = await perguntarNumero("id do disco: ");
+  console.table((await avaliacoes.listarPorProduto(id)).map(resumir));
 }
+
+async function buscarAvaliacoesPorTitulo() {
+  const trecho = await perguntar("trecho do título (regex, ex.: ^mui): ");
+  console.table((await avaliacoes.buscarPorTitulo(trecho)).map(resumir));
+}
+
+async function cadastrarAvaliacao() {
+  const dados = {
+    produtoId: await perguntarNumero("id do disco (PostgreSQL): "),
+    cliente_email: await perguntar("e-mail: "),
+    nota: await perguntarNumero("nota (1 a 5): "),
+    titulo: await perguntar("título: "),
+  };
+  const comentario = await perguntar("comentário (Enter = sem): ");
+  if (comentario) dados.comentario = comentario; // campo opcional: só grava se tiver
+  const sentimento = await perguntar("sentimento positivo/neutro/negativo (Enter = sem): ");
+  if (sentimento) dados.sentimento = sentimento;
+  const { id, disco } = await integracao.cadastrarAvaliacao(dados);
+  console.log(`Avaliação ${id} gravada para "${disco.titulo}" (${disco.codigo}).`);
+}
+
+async function alterarAvaliacao() {
+  const id = await perguntar("_id da avaliação: ");
+  const campos = {};
+  const nota = await perguntar("nova nota (Enter = mantém): ");
+  if (nota) campos.nota = Number(nota);
+  const titulo = await perguntar("novo título (Enter = mantém): ");
+  if (titulo) campos.titulo = titulo;
+  const r = await avaliacoes.atualizar(id, campos);
+  console.log(r.matchedCount ? `Alterada (${r.modifiedCount} documento modificado).` : "Avaliação não encontrada.");
+}
+
+async function excluirAvaliacao() {
+  const id = await perguntar("_id da avaliação: ");
+  const apagados = await avaliacoes.excluir(id);
+  console.log(apagados ? "Avaliação excluída." : "Avaliação não encontrada.");
+}
+
+// ---------- Menu ----------
+const opcoes = {
+  1: ["Testar conexões (PostgreSQL + MongoDB)", testarConexoes, "Conexões"],
+  2: ["Listar discos (JOIN com categoria)", listarDiscos, "PostgreSQL"],
+  3: ["Cadastrar disco", cadastrarDisco],
+  4: ["Alterar preço/estoque de um disco", alterarDisco],
+  5: ["Excluir disco", excluirDisco],
+  6: ["Pedidos com cliente e total (JOIN 4 tabelas)", listarPedidos],
+  7: ["Listar avaliações de um disco", listarAvaliacoes, "MongoDB"],
+  8: ["Buscar avaliações por título (regex)", buscarAvaliacoesPorTitulo],
+  9: ["Cadastrar avaliação", cadastrarAvaliacao],
+  10: ["Alterar avaliação", alterarAvaliacao],
+  11: ["Excluir avaliação", excluirAvaliacao],
+};
 
 async function main() {
   while (true) {
     console.log("\n=== Loja de Vinil — PostgreSQL + MongoDB ===");
-    for (const [n, [rotulo]] of Object.entries(opcoes)) console.log(`${n.padStart(2)}. ${rotulo}`);
+    for (const [n, [rotulo, , secao]] of Object.entries(opcoes)) {
+      if (secao) console.log(`-- ${secao} --`);
+      console.log(`${n.padStart(2)}. ${rotulo}`);
+    }
     console.log(" 0. Sair");
     const escolha = await perguntar("> ");
     if (escolha === "0") break;
