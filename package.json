@@ -6,9 +6,9 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node --env-file=.env src/index.js",
-    "db:sql": "psql -h ${PG_HOST:-localhost} -p ${PG_PORT:-5432} -U ${PG_USER:-postgres} -d ${PG_DATABASE:-loja_vinil} -f sql/01_schema.sql -f sql/02_seed.sql",
-    "db:mongo": "mongosh \"${MONGO_URI:-mongodb://localhost:27017}/${MONGO_DB:-loja_vinil}\" mongo/01_init.js",
-    "db:setup": "npm run db:sql && npm run db:mongo"
+    "db:up": "docker compose up -d --wait",
+    "db:down": "docker compose down",
+    "db:reset": "docker compose exec -T postgres psql -q -U postgres -d loja_vinil -f /docker-entrypoint-initdb.d/01_schema.sql -f /docker-entrypoint-initdb.d/02_seed.sql && docker compose exec -T mongo mongosh --quiet loja_vinil /docker-entrypoint-initdb.d/01_init.js"
   },
   "engines": {
     "node": ">=20"

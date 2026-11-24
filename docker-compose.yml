@@ -1,5 +1,6 @@
-# Opcional: sobe os dois bancos limpos em container (Colima ou Docker).
+# Sobe os dois bancos limpos em container (Colima ou Docker).
 # Portas do host deslocadas (5433 / 27018) para não brigar com Postgres.app e mongod locais.
+# Na PRIMEIRA subida, os scripts de sql/ e mongo/ rodam sozinhos (docker-entrypoint-initdb.d).
 services:
   postgres:
     image: postgres:17
@@ -11,6 +12,10 @@ services:
       - "5433:5432"
     volumes:
       - ./sql:/docker-entrypoint-initdb.d:ro
+    healthcheck: # "--wait" do compose espera o banco aceitar conexões
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "loja_vinil"]
+      interval: 2s
+      retries: 30
   mongo:
     image: mongo:8
     environment:
@@ -19,3 +24,7 @@ services:
       - "27018:27017"
     volumes:
       - ./mongo:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 2s
+      retries: 30
