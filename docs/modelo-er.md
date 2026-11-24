@@ -45,4 +45,6 @@ erDiagram
 
 A coleção `avaliacoes` não tem FK (MongoDB não tem integridade referencial). Ela guarda `produto_id`, que é o `produtos.id` do PostgreSQL, e `codigo_produto`, igual a `produtos.codigo`. A aplicação faz a junção dos dois lados.
 
-> TODO para a entrega: exportar este diagrama como `docs/modelo-er.png` (mermaid.live → PNG, ou pgAdmin/DBeaver → ERD).
+![Modelo ER](modelo-er.png)
+
+> Imagem gerada a partir do Mermaid acima com `@mermaid-js/mermaid-cli` (`mmdc -i er.mmd -o docs/modelo-er.png`).
