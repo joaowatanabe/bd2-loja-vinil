@@ -5,6 +5,7 @@ import { connectMongo, closeMongo } from "./db/mongo.js";
 import { rl, perguntar, perguntarNumero } from "./cli/menu.js";
 import { mensagemErroPg } from "./cli/erros.js";
 import * as produtos from "./repositories/produtosRepository.js";
+import * as pedidos from "./repositories/pedidosRepository.js";
 import * as avaliacoes from "./repositories/avaliacoesRepository.js";
 import * as integracao from "./services/integracaoService.js";
 
@@ -14,6 +15,7 @@ const opcoes = {
   3: ["[SQL] Cadastrar disco", cadastrarDisco],
   4: ["[SQL] Alterar preço/estoque de um disco", alterarDisco],
   5: ["[SQL] Excluir disco", excluirDisco],
+  50: ["[SQL] Pedidos com cliente e total (JOIN 4 tabelas)", listarPedidos],
   6: ["[Mongo] Listar avaliações de um disco", listarAvaliacoes],
   7: ["[Mongo] Cadastrar avaliação", () => avaliacoes.inserir({})],
   8: ["[Mongo] Alterar avaliação", () => avaliacoes.atualizar()],
@@ -61,6 +63,12 @@ async function excluirDisco() {
   const id = await perguntarNumero("id do disco: ");
   const apagado = await produtos.excluir(id);
   console.log(apagado ? `Excluído: ${apagado.titulo}` : `Disco ${id} não encontrado.`);
+}
+
+async function listarPedidos() {
+  console.table(await pedidos.listarComCliente());
+  const id = await perguntar("ver itens de qual pedido? (Enter = nenhum): ");
+  if (id) console.table(await pedidos.itensDoPedido(Number(id)));
 }
 
 async function listarAvaliacoes() {
