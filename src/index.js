@@ -4,7 +4,7 @@
 import { pool } from "./db/postgres.js";
 import { connectMongo, closeMongo } from "./db/mongo.js";
 import { rl, perguntar, perguntarNumero } from "./cli/menu.js";
-import { mensagemErroPg } from "./cli/erros.js";
+import { mensagemErroPg, formatarErroValidacao, REGEX_CODIGO } from "./cli/erros.js";
 import * as produtos from "./repositories/produtosRepository.js";
 import * as pedidos from "./repositories/pedidosRepository.js";
 import * as avaliacoes from "./repositories/avaliacoesRepository.js";
@@ -109,6 +109,26 @@ async function excluirAvaliacao() {
   console.log(apagados ? "Avaliação excluída." : "Avaliação não encontrada.");
 }
 
+// ---------- Demonstrações: $jsonSchema e regex ----------
+async function inserirAvaliacaoInvalida() {
+  // Documento com várias regras quebradas de propósito (e SEM cliente_email, que é required).
+  const doc = {
+    produto_id: 1,
+    codigo_produto: "DISCO-1", // pattern ^VIN-[0-9]{4}$
+    nota: 7,                   // maximum 5
+    titulo: "Oi",              // minLength 3
+    sentimento: "furioso",     // enum
+  };
+  console.log("Tentando inserir:", doc);
+  await avaliacoes.inserir(doc); // vai lançar o erro 121, tratado no main()
+  console.log("(não deveria chegar aqui: o documento foi aceito!)");
+}
+
+async function testarRegexCodigo() {
+  const texto = await perguntar("texto para testar contra /^VIN-[0-9]{4}$/: ");
+  console.log(REGEX_CODIGO.test(texto) ? `"${texto}" CASA com o padrão ✓` : `"${texto}" NÃO casa ✗`);
+}
+
 // ---------- Menu ----------
 const opcoes = {
   1: ["Testar conexões (PostgreSQL + MongoDB)", testarConexoes, "Conexões"],
@@ -122,6 +142,8 @@ const opcoes = {
   9: ["Cadastrar avaliação", cadastrarAvaliacao],
   10: ["Alterar avaliação", alterarAvaliacao],
   11: ["Excluir avaliação", excluirAvaliacao],
+  15: ["Tentar inserir avaliação INVÁLIDA ($jsonSchema)", inserirAvaliacaoInvalida, "Demonstrações"],
+  16: ["Testar a regex do código (VIN-0000)", testarRegexCodigo],
 };
 
 async function main() {
@@ -139,6 +161,11 @@ async function main() {
     try {
       await opcao[1]();
     } catch (err) {
+      if (err.code === 121) { // MongoDB: Document failed validation ($jsonSchema)
+        console.error("MongoDB recusou: Document failed validation");
+        for (const linha of formatarErroValidacao(err)) console.error("  " + linha);
+        continue;
+      }
       console.error("Erro:", mensagemErroPg(err) ?? err.message);
     }
   }

@@ -11,3 +11,29 @@ const ERROS_PG = {
 export function mensagemErroPg(err) {
   return ERROS_PG[err.code] ? `${ERROS_PG[err.code]}. [${err.code}] ${err.message}` : null;
 }
+
+// A MESMA regex do pattern de codigo_produto em mongo/01_init.js.
+// Se mudar uma, mude a outra (o menu 16 usa esta para testar textos).
+export const REGEX_CODIGO = /^VIN-[0-9]{4}$/;
+
+// Erro 121 do MongoDB = "Document failed validation".
+// err.errInfo.details.schemaRulesNotSatisfied diz QUAIS regras do $jsonSchema falharam.
+export function formatarErroValidacao(err) {
+  const regras = err.errInfo?.details?.schemaRulesNotSatisfied ?? [];
+  const linhas = [];
+  for (const regra of regras) {
+    if (regra.operatorName === "required") {
+      linhas.push(`✗ faltando campos obrigatórios (required): ${regra.missingProperties.join(", ")}`);
+    } else if (regra.operatorName === "properties") {
+      for (const campo of regra.propertiesNotSatisfied) {
+        for (const d of campo.details) {
+          const valor = d.consideredValue !== undefined ? ` — valor enviado: ${JSON.stringify(d.consideredValue)}` : "";
+          linhas.push(`✗ campo "${campo.propertyName}": viola ${d.operatorName} (regra: ${JSON.stringify(d.specifiedAs)})${valor}`);
+        }
+      }
+    } else {
+      linhas.push(`✗ ${regra.operatorName}: ${JSON.stringify(regra)}`);
+    }
+  }
+  return linhas;
+}
