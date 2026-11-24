@@ -119,6 +119,21 @@ async function mostrarIndiceExplain() {
   console.log("lê só os documentos daquele disco (IXSCAN) em vez da coleção inteira (COLLSCAN).");
 }
 
+// ---------- Integração (os dois bancos) ----------
+async function mostrarFicha() {
+  const f = await integracao.fichaDoProduto(await perguntarNumero("id do disco: "));
+  if (!f) return console.log("Disco não encontrado no PostgreSQL.");
+  const estrelas = f.media ? "★".repeat(Math.round(f.media)) + "☆".repeat(5 - Math.round(f.media)) : "";
+  console.log(`\n💿 ${f.titulo} — ${f.artista} (${f.ano})`);
+  console.log(`   [PostgreSQL] código ${f.codigo} · ${f.categoria} · R$ ${f.preco} · estoque ${f.estoque}`);
+  console.log(`   [MongoDB]    nota média ${f.media ?? "-"} ${estrelas} · ${f.totalAvaliacoes} avaliação(ões)`);
+  for (const a of f.ultimas) console.log(`   [MongoDB]    "${a.titulo}" (${a.nota}/5) — ${a.cliente_email}`);
+}
+
+async function mostrarRanking() {
+  console.table(await integracao.catalogoRanqueado());
+}
+
 // ---------- Demonstrações: $jsonSchema e regex ----------
 async function inserirAvaliacaoInvalida() {
   // Documento com várias regras quebradas de propósito (e SEM cliente_email, que é required).
@@ -153,6 +168,8 @@ const opcoes = {
   10: ["Alterar avaliação", alterarAvaliacao],
   11: ["Excluir avaliação", excluirAvaliacao],
   12: ["Índices e explain (IXSCAN × COLLSCAN)", mostrarIndiceExplain],
+  13: ["Ficha completa do disco (SQL + Mongo)", mostrarFicha, "Integração"],
+  14: ["Catálogo ranqueado por nota (SQL + Mongo)", mostrarRanking],
   15: ["Tentar inserir avaliação INVÁLIDA ($jsonSchema)", inserirAvaliacaoInvalida, "Demonstrações"],
   16: ["Testar a regex do código (VIN-0000)", testarRegexCodigo],
 };
