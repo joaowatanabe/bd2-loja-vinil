@@ -1,5 +1,7 @@
 # Treino ao vivo: 5 alterações antes da apresentação
 
+> **Aviso (25/11/2026):** não haverá apresentação. A entrega é só o envio no Blackboard em **02/12/2026**. Este arquivo fica como **material de estudo opcional**: os itens da "Parte 5" continuam sendo um bom roteiro para demonstrar o projeto a si mesmo.
+
 Faça cada uma **sozinho**, cronometrando (meta: até 5 min cada). Depois desfaça com `git checkout -- .` e `npm run db:reset`.
 Ordem: do mais fácil ao mais difícil.
 

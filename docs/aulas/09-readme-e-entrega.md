@@ -31,19 +31,18 @@ O item 7 é o que mais mostra domínio. Treine dizer em voz alta: *"transacional
 | Arquivo | Para quê |
 |---|---|
 | `docs/aulas/01..09` | entender cada parte, com exercícios "Sua vez" |
-| `docs/ROTEIRO-APRESENTACAO.md` | o que digitar e falar, item por item da Parte 5, com arquivo:linha |
+| `docs/ROTEIRO-APRESENTACAO.md` | (opcional) o que digitar e falar, item por item da Parte 5, com arquivo:linha |
 | `docs/PERGUNTAS-DO-PROFESSOR.md` | respostas curtas para as perguntas prováveis |
 | `docs/TREINO-AO-VIVO.md` | 5 alterações para praticar sozinho |
 | `docs/evidencias.md` | saídas reais de todas as opções do menu |
 
-## 4. Checklist final (véspera)
+## 4. Checklist da entrega (Blackboard, 02/12/2026)
 
-1. `colima start && npm run db:up && npm run db:reset && npm start` → menu 1 mostra as duas versões.
-2. Percorrer o roteiro inteiro uma vez, cronometrando.
-3. Fazer pelo menos os exercícios 1, 3 e 4 do treino sem olhar o gabarito.
-4. Preencher integrantes no README (se houver colegas).
-5. `git push` (quando decidir entregar) e conferir no GitHub que `docs/modelo-er.png` aparece.
-6. `npm run db:down && colima stop`.
+Não haverá apresentação: a entrega é o envio no Blackboard. O roteiro, as perguntas e o treino ficam como estudo opcional.
+
+1. Conferir no GitHub (<https://github.com/joaowatanabe/bd2-loja-vinil>) que `README.md`, `sql/`, `mongo/01_init.js`, `docs/modelo-er.png` e `src/` estão lá.
+2. Enviar no Blackboard o link do repositório (e, se o formulário pedir arquivo, o `.zip` do repositório baixado do GitHub).
+3. (Opcional) rodar uma vez: `colima start && npm run db:up && npm run db:reset && npm start`, depois `npm run db:down && colima stop`.
 
 ---
 

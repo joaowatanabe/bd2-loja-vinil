@@ -1,5 +1,7 @@
 # Etapa 01 — Visão geral e modelagem
 
+> **Aviso (25/11/2026):** não haverá apresentação. A entrega é só o envio no Blackboard em **02/12/2026**. Este arquivo fica como **material de estudo opcional**: os itens da "Parte 5" continuam sendo um bom roteiro para demonstrar o projeto a si mesmo.
+
 > **Objetivo da etapa:** entender O QUE o projeto faz, POR QUE ele usa dois bancos e como os dados foram divididos. Nada de código ainda: é a etapa que responde a pergunta nº 7 do README ("por que esse dado está nesse banco?").
 
 ## 1. O que é o projeto, em uma frase

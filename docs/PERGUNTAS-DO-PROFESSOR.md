@@ -1,5 +1,7 @@
 # Perguntas prováveis do professor (com respostas curtas)
 
+> **Aviso (25/11/2026):** não haverá apresentação. A entrega é só o envio no Blackboard em **02/12/2026**. Este arquivo fica como **material de estudo opcional**: os itens da "Parte 5" continuam sendo um bom roteiro para demonstrar o projeto a si mesmo.
+
 ## Modelagem e escolha dos bancos
 
 **1. Por que as avaliações estão no Mongo e não no Postgres?**

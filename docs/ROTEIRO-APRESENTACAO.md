@@ -1,4 +1,6 @@
-# Roteiro da apresentação (02/12/2026)
+# Roteiro de demonstração (material opcional)
+
+> **Aviso (25/11/2026):** não haverá apresentação. A entrega é só o envio no Blackboard em **02/12/2026**. Este arquivo fica como **material de estudo opcional**: os itens da "Parte 5" continuam sendo um bom roteiro para demonstrar o projeto a si mesmo.
 
 **Tempo estimado:** ~12 minutos de demonstração + perguntas.
 **Antes de entrar (5 min antes):**

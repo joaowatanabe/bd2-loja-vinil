@@ -1,6 +1,6 @@
 # 💿 Loja de Discos de Vinil: PostgreSQL + MongoDB
 
-Atividade Final de **Banco de Dados II**, ADS SENAC Pelotas, 3º semestre. Entrega e apresentação na **Aula 18, 02/12/2026**.
+Atividade Final de **Banco de Dados II**, ADS SENAC Pelotas, 3º semestre. Entrega por envio no **Blackboard em 02/12/2026** (trabalho individual; não haverá apresentação).
 
 Aplicação de terminal (CLI) de uma loja de discos de vinil que usa **dois bancos ao mesmo tempo**: o **PostgreSQL** guarda o catálogo, o estoque, os clientes e os pedidos; o **MongoDB** guarda as avaliações dos discos. A integração junta os dois numa ficha completa do disco: preço e estoque vêm do SQL, nota média e opiniões vêm do Mongo.
 
@@ -13,8 +13,6 @@ Aplicação de terminal (CLI) de uma loja de discos de vinil que usa **dois banc
 | Nome | GitHub |
 |---|---|
 | João Vicente Watanabe | [@joaowatanabe](https://github.com/joaowatanabe) |
-
-> TODO: incluir os demais integrantes, se houver (grupo de até 4).
 
 ## 2–4. 📋 Tema, linguagem e SGBD
 
@@ -79,10 +77,10 @@ bd2-loja-vinil/
 ├── docs/
 │   ├── modelo-er.md / .png    # modelo ER (Mermaid + imagem exportada)
 │   ├── evidencias.md          # saídas reais dos testes
-│   ├── aulas/01..09-*.md      # material de estudo, etapa por etapa
-│   ├── ROTEIRO-APRESENTACAO.md
-│   ├── PERGUNTAS-DO-PROFESSOR.md
-│   └── TREINO-AO-VIVO.md
+│   ├── aulas/01..09-*.md      # material de estudo opcional, etapa por etapa
+│   ├── ROTEIRO-APRESENTACAO.md  # (opcional) roteiro de demonstração
+│   ├── PERGUNTAS-DO-PROFESSOR.md # (opcional) perguntas de revisão
+│   └── TREINO-AO-VIVO.md      # (opcional) exercícios de alteração
 └── src/
     ├── index.js                       # menu: cada opção é uma função curta
     ├── cli/menu.js                    # perguntar() / perguntarNumero()
@@ -167,10 +165,10 @@ Resumo: o que é **transacional e relacionado** foi para o SQL; o que é **flex�
 - [x] Modelo ER incluído (`docs/modelo-er.png`).
 - [x] Scripts SQL e MongoDB incluídos.
 - [x] O README explica como executar o projeto.
-- [ ] Todos os integrantes conseguem explicar e demonstrar a aplicação → estudar `docs/aulas/` e `docs/TREINO-AO-VIVO.md`.
+- [x] O integrante (trabalho individual) sabe explicar a aplicação; material de estudo em `docs/aulas/`.
 
-Roteiro da apresentação: [`docs/ROTEIRO-APRESENTACAO.md`](docs/ROTEIRO-APRESENTACAO.md).
+Material de estudo opcional (não haverá apresentação): [`docs/aulas/`](docs/aulas/), [`docs/ROTEIRO-APRESENTACAO.md`](docs/ROTEIRO-APRESENTACAO.md), [`docs/PERGUNTAS-DO-PROFESSOR.md`](docs/PERGUNTAS-DO-PROFESSOR.md) e [`docs/TREINO-AO-VIVO.md`](docs/TREINO-AO-VIVO.md).
 
 ## 🤖 Uso de IA
 
-Usamos ferramentas de IA como apoio, como o enunciado permite. Todo o código foi revisado, e os integrantes sabem explicar e alterar as consultas, o schema e a integração.
+Usamos ferramentas de IA como apoio, como o enunciado permite. Todo o código foi revisado, e o autor sabe explicar e alterar as consultas, o schema e a integração.
